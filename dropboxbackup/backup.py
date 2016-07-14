@@ -1,18 +1,24 @@
-import dropbox
+import concurrent.futures
+import datetime
 import logging
 import os
+import pathlib
 import pickle
-import concurrent.futures
+import dropbox
+from .config import DropboxOfflineBackupConfig
 
 class DropboxOfflineBackup:
     def __init__(self):
-        self.dbx = dropbox.Dropbox("YOUR_ACCESS_KEY")
-        self.destination_folder = "des"
-        self.threads = 5
-        self.reuse_entries = True
+        logging.basicConfig(level=logging.INFO)
+        self.config = DropboxOfflineBackupConfig().config
+        self.dbx = dropbox.Dropbox(self.config['DropboxBackup']['AccessToken'])
+        self.destination_folder = os.path.join(self.config['DropboxBackup']['BackupDestinationPath'],
+                                               datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S"))
+        self.threads = self.config['DropboxBackup']['ConcurrentThreads']
+        self.reuse_entries = False
 
         if not os.path.exists(self.destination_folder):
-            os.mkdir(self.destination_folder)
+            pathlib.Path(self.destination_folder).mkdir(parents=True)
 
         logging.basicConfig(level=logging.INFO)
         dropbox_logger = logging.getLogger("dropbox")
@@ -90,5 +96,3 @@ class DropboxOfflineBackup:
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             executor.map(self.download_one_file, self.all_files)
         logging.info("Finished.")
-
-DropboxOfflineBackup()
