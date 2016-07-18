@@ -5,11 +5,11 @@ import os
 import pathlib
 import pickle
 import dropbox
+import shutil
 from .config import DropboxOfflineBackupConfig
 
 class DropboxOfflineBackup:
     def __init__(self):
-        logging.basicConfig(level=logging.INFO)
         self.config = DropboxOfflineBackupConfig().config
         self.dbx = dropbox.Dropbox(self.config['DropboxBackup']['AccessToken'])
         self.destination_folder = os.path.join(self.config['DropboxBackup']['BackupDestinationPath'],
@@ -20,15 +20,32 @@ class DropboxOfflineBackup:
         if not os.path.exists(self.destination_folder):
             pathlib.Path(self.destination_folder).mkdir(parents=True)
 
-        logging.basicConfig(level=logging.INFO)
-        dropbox_logger = logging.getLogger("dropbox")
-        dropbox_logger.setLevel(logging.WARNING)
-        requests_logger = logging.getLogger("requests")
-        requests_logger.setLevel(logging.WARNING)
-
+        self.delete_old()
         self.get_entires()
         self.make_folders()
         self.download_files()
+
+    def delete_old(self):
+        logging.info("Starting to clear old backups")
+        backup_root = self.config['DropboxBackup']['BackupDestinationPath']
+        keep = self.config.getint('DropboxBackup', 'KeepHowManyBackups')
+        all_backups = []
+        for i in os.listdir(backup_root):
+            try:
+                datetime.datetime.strptime(i, "%Y.%m.%d.%H.%M.%S")
+                all_backups.append(i)
+            except ValueError:
+                logging.warning("Irrelevant folder or file found. Name:{}".format(i))
+        if len(all_backups) > keep:
+            all_backups.sort()
+            logging.info("Found {} backups. Keeping {} backups. Deleting {} backups.".format(
+                len(all_backups)-1, keep, len(all_backups)-keep
+            ))
+            for folder_name in all_backups[:len(all_backups)-keep]:
+                os.chdir(backup_root)
+                logging.info("Deleting backup {}".format(folder_name))
+                shutil.rmtree(folder_name)
+
 
     def get_entires(self):
         if self.reuse_entries and os.path.exists("all_entries"):
@@ -85,14 +102,14 @@ class DropboxOfflineBackup:
             logging.error("Error when downloading {}".format(file.path_lower))
             logging.error(e)
         self.progress += 1/len(self.all_files)
-        logging.info("Current progress: {}%".format(self.progress*100))
+        logging.debug("Current progress: {}%".format(self.progress*100))
         if self.progress - self.printed_progress >= 0.01:
             self.printed_progress += 0.01
-            logging.info("Progress: {}%".format(self.printed_progress*100))
+            logging.debug("Progress: {}%".format(self.printed_progress*100))
 
     def download_files(self):
         self.progress = 0
         self.printed_progress = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             executor.map(self.download_one_file, self.all_files)
-        logging.info("Finished.")
+        logging.info("Finished downloading all files.")
