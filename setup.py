@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dropbox-offline-backup',
-    version='0.0.9',
+    version='0.0.11',
     description='Backup your Dropbox offline',
     url='https://github.com/764664/dropbox-offline-backup',
     author='Jie Lu',
