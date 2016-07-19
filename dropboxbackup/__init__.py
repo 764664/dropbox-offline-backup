@@ -5,7 +5,7 @@ from .config import DropboxOfflineBackupConfig
 def start():
     logging.basicConfig(
         filename=DropboxOfflineBackupConfig().config['DropboxBackup']['LogFile'],
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
     console = logging.StreamHandler()

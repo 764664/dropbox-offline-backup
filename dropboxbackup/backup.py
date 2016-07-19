@@ -45,7 +45,8 @@ class DropboxOfflineBackup:
                 os.chdir(backup_root)
                 logging.info("Deleting backup {}".format(folder_name))
                 shutil.rmtree(folder_name)
-
+        else:
+            logging.info("Found {} backups. No need to delete.".format(len(all_backups)-1))
 
     def get_entires(self):
         if self.reuse_entries and os.path.exists("all_entries"):
@@ -65,7 +66,7 @@ class DropboxOfflineBackup:
 
         self.all_files = [x for x in all_entries if isinstance(x, dropbox.files.FileMetadata)]
         self.all_folders = [x for x in all_entries if isinstance(x, dropbox.files.FolderMetadata)]
-        print("Discovered {} files".format(len(self.all_files)))
+        logging.info("Discovered {} files".format(len(self.all_files)))
 
     def make_folders(self):
         os.chdir(self.destination_folder)
@@ -99,8 +100,8 @@ class DropboxOfflineBackup:
         try:
             self.dbx.files_download_to_file(actual_path + "/" + file.name, file.path_lower)
         except dropbox.exceptions.ApiError as e:
-            logging.error("Error when downloading {}".format(file.path_lower))
-            logging.error(e)
+            logging.warning("Error when downloading {}".format(file.path_lower))
+            logging.warning(e)
         self.progress += 1/len(self.all_files)
         logging.debug("Current progress: {}%".format(self.progress*100))
         if self.progress - self.printed_progress >= 0.01:
