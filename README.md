@@ -1,6 +1,6 @@
 # dropbox-offline-backup
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
-[![PyPI version](https://img.shields.io/pypi/v/dropbox-offline-backup.svg)](https://pypi.python.org/pypi/dropbox-offline-backup/0.0.5)
+[![PyPI version](https://img.shields.io/pypi/v/dropbox-offline-backup.svg)](https://pypi.python.org/pypi/dropbox-offline-backup/)
 [![Python version](https://img.shields.io/badge/python-3-green.svg)](https://www.python.org)
 
 A software which makes offline backup of your whole Dropbox.
