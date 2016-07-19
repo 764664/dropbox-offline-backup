@@ -3,7 +3,6 @@ import datetime
 import logging
 import os
 import pathlib
-import pickle
 import dropbox
 import shutil
 from .config import DropboxOfflineBackupConfig
@@ -15,7 +14,6 @@ class DropboxOfflineBackup:
         self.destination_folder = os.path.join(self.config['DropboxBackup']['BackupDestinationPath'],
                                                datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S"))
         self.threads = self.config['DropboxBackup']['ConcurrentThreads']
-        self.reuse_entries = False
 
         if not os.path.exists(self.destination_folder):
             pathlib.Path(self.destination_folder).mkdir(parents=True)
@@ -49,21 +47,14 @@ class DropboxOfflineBackup:
             logging.info("Found {} backups. No need to delete.".format(len(all_backups)-1))
 
     def get_entires(self):
-        if self.reuse_entries and os.path.exists("all_entries"):
-            with open("all_entries", "rb") as f:
-                all_entries = pickle.load(f)
-        else:
-            logging.info("Start to fetch list of entries.")
-            list_content = self.dbx.files_list_folder("", recursive = True)
-            all_entries = list_content.entries
-            logging.info("Fetched {} entries".format(len(all_entries)))
-            while list_content.has_more:
-                list_content = self.dbx.files_list_folder_continue(list_content.cursor)
-                logging.info("Fetched {} entries".format(len(list_content.entries)))
-                all_entries.extend(list_content.entries)
-            with open("all_entries", "wb") as f:
-                pickle.dump(all_entries, f)
-
+        logging.info("Starting to fetch list of entries.")
+        list_content = self.dbx.files_list_folder("", recursive = True)
+        all_entries = list_content.entries
+        logging.info("Fetched {} entries".format(len(all_entries)))
+        while list_content.has_more:
+            list_content = self.dbx.files_list_folder_continue(list_content.cursor)
+            logging.info("Fetched {} entries".format(len(list_content.entries)))
+            all_entries.extend(list_content.entries)
         self.all_files = [x for x in all_entries if isinstance(x, dropbox.files.FileMetadata)]
         self.all_folders = [x for x in all_entries if isinstance(x, dropbox.files.FolderMetadata)]
         logging.info("Discovered {} files".format(len(self.all_files)))
@@ -103,10 +94,9 @@ class DropboxOfflineBackup:
             logging.warning("Error when downloading {}".format(file.path_lower))
             logging.warning(e)
         self.progress += 1/len(self.all_files)
-        logging.debug("Current progress: {}%".format(self.progress*100))
         if self.progress - self.printed_progress >= 0.01:
             self.printed_progress += 0.01
-            logging.debug("Progress: {}%".format(self.printed_progress*100))
+            logging.debug("Progress: {}%".format(round(self.printed_progress*100)))
 
     def download_files(self):
         self.progress = 0

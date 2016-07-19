@@ -11,7 +11,7 @@ def start():
     console = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     console.setFormatter(formatter)
-    console.setLevel(logging.INFO)
+    console.setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(console)
     dropbox_logger = logging.getLogger("dropbox")
     dropbox_logger.setLevel(logging.WARNING)
