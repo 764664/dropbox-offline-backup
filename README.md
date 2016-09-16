@@ -37,4 +37,6 @@ If you don't know where to put the large backup files, you can check out [time4v
 
 ## Tips
 
-[tmux](https://tmux.github.io/) and [cron](https://en.wikipedia.org/wiki/Cron) might be useful.
+- Please make sure the locale of the system is set to UTF-8.
+
+- [tmux](https://tmux.github.io/) and [cron](https://en.wikipedia.org/wiki/Cron) might be useful.
