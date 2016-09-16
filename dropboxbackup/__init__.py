@@ -6,7 +6,9 @@ def start():
     logging.getLogger('').setLevel(logging.DEBUG)
     console = logging.StreamHandler()
     file_handler = logging.FileHandler(DropboxOfflineBackupConfig().config['DropboxBackup']['LogFile'])
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        fmt='%(asctime)s %(levelname)-8s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
     console.setFormatter(formatter)
     file_handler.setFormatter(formatter)
     console.setLevel(logging.DEBUG)
